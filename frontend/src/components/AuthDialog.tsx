@@ -1,4 +1,6 @@
 import { useState } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL;
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,7 +23,7 @@ export const AuthDialog = ({ open, onClose, setUser }: AuthDialogProps) => {
   const handleSubmit = async (e: React.FormEvent, type: 'login' | 'signup') => {
     e.preventDefault();
     setIsLoading(true);
-    const url = type === 'login' ? 'http://localhost:4000/api/auth/login' : 'http://localhost:4000/api/auth/signup';
+  const url = type === 'login' ? `${API_URL}/auth/login` : `${API_URL}/auth/signup`;
     const form = e.target as HTMLFormElement;
     let email = '';
     let password = '';
