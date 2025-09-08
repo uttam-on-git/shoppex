@@ -48,7 +48,7 @@ A single-page e-commerce web application with authentication, product listing, f
 
 2. **Configure environment:**
 
-   - Copy `.env.example` to `.env` and set your Postgres connection string (`DATABASE_URL`)
+   - create `.env` and set your Postgres connection string (`DATABASE_URL`)
    - Set `PORT=4000` (or your preferred port)
 
 3. **Run database migrations:**
