@@ -1,54 +1,65 @@
 // controllers/authController.js
 
-import db, { saveSessions } from "../config/db.js";
+import prisma from "../config/db.js";
 
-export const signup = (req, res) => {
+function generateToken() {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+}
+
+export const signup = async (req, res) => {
   const { email, password, name } = req.body;
   if (!email || !password || !name) {
     return res.status(400).json({ error: "All fields are required" });
   }
-  if (db.users.find((u) => u.email === email)) {
-    return res.status(409).json({ error: "User already exists" });
+  try {
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return res.status(409).json({ error: "User already exists" });
+    }
+    const user = await prisma.user.create({ data: { email, password, name } });
+    const token = generateToken();
+    await prisma.session.create({ data: { token, userId: user.id } });
+    res.json({
+      token,
+      user: { id: user.id, email: user.email, name: user.name },
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Signup failed" });
   }
-  const newUser = {
-    id: db.users.length + 1,
-    email,
-    password, // In production, hash this!
-    name,
-  };
-  db.users.push(newUser);
-  const token = Math.random().toString(36).substring(2);
-  db.sessions[token] = newUser.id;
-  saveSessions();
-  res.json({
-    token,
-    user: { id: newUser.id, email: newUser.email, name: newUser.name },
-  });
 };
 
-export const login = (req, res) => {
+export const login = async (req, res) => {
   const { email, password } = req.body;
-  const user = db.users.find(
-    (u) => u.email === email && u.password === password
-  );
-  if (!user) {
-    return res.status(401).json({ error: "Invalid credentials" });
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || user.password !== password) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+    const token = generateToken();
+    await prisma.session.create({ data: { token, userId: user.id } });
+    res.json({
+      token,
+      user: { id: user.id, email: user.email, name: user.name },
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Login failed" });
   }
-  const token = Math.random().toString(36).substring(2);
-  db.sessions[token] = user.id;
-  saveSessions();
-  res.json({
-    token,
-    user: { id: user.id, email: user.email, name: user.name },
-  });
 };
 
-export const me = (req, res) => {
+export const me = async (req, res) => {
   const token = req.headers.authorization?.split(" ")[1];
-  const userId = db.sessions[token];
-  const user = db.users.find((u) => u.id === userId);
-  if (!user) {
-    return res.status(401).json({ error: "Unauthorized" });
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
+  try {
+    const session = await prisma.session.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+    if (!session || !session.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const { id, email, name } = session.user;
+    res.json({ id, email, name });
+  } catch (err) {
+    res.status(401).json({ error: "Unauthorized" });
   }
-  res.json({ id: user.id, email: user.email, name: user.name });
 };

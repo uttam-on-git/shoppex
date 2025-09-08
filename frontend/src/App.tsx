@@ -18,8 +18,9 @@ const App = () => {
   // Check for user on mount
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const API_URL = import.meta.env.VITE_API_URL;
     if (token) {
-      fetch('http://localhost:4000/api/auth/me', {
+      fetch(`${API_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       })
         .then(res => res.ok ? res.json() : null)

@@ -112,7 +112,7 @@ const Products = ({ user, setUser, onLogout }: { user: { name: string } | null, 
           
           {/* Products Grid */}
           <div className="flex-1">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex max-md:flex-col max-md:justify-center items-center justify-between max-md:gap-3 max-md:text-center mb-6">
               <div>
                 <h1 className="text-2xl font-bold">Products</h1>
                 <p className="text-muted-foreground">

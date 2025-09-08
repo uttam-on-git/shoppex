@@ -76,7 +76,7 @@ export const AuthDialog = ({ open, onClose, setUser }: AuthDialogProps) => {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center">Welcome to ShopLux</DialogTitle>
+          <DialogTitle className="text-center">Welcome to Shoppex</DialogTitle>
         </DialogHeader>
         
         <Tabs defaultValue="login" className="w-full">

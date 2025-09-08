@@ -1,4 +1,4 @@
-# Cart Companion – E-commerce SPA
+# E-commerce SPA
 
 A single-page e-commerce web application with authentication, product listing, filtering, and persistent cart functionality.
 
@@ -8,10 +8,15 @@ A single-page e-commerce web application with authentication, product listing, f
 
 ### Backend
 
-- **Built with:** Node.js, Express
-- **Authentication:** JWT-based signup, login, and protected routes
+- **Built with:** Node.js, Express, PostgreSQL, Prisma ORM
+- **Authentication:** Token-based signup, login, and protected routes
 - **Product APIs:** Full CRUD for items (with price/category filters)
-- **Cart APIs:** Add/remove items, cart persists per user
+- **Cart APIs:** Add/remove items, cart persists per user in database
+
+#### Database
+
+- **PostgreSQL** is used for all data (users, products, cart, sessions)
+- **Prisma** is used as the ORM (see `backend/prisma/schema.prisma`)
 
 ### Frontend
 
@@ -41,24 +46,40 @@ A single-page e-commerce web application with authentication, product listing, f
    npm install
    ```
 
-2. **Start the server:**
+2. **Configure environment:**
+
+   - Copy `.env.example` to `.env` and set your Postgres connection string (`DATABASE_URL`)
+   - Set `PORT=4000` (or your preferred port)
+
+3. **Run database migrations:**
 
    ```bash
-   node index.js
+   npx prisma migrate dev --name init
    ```
 
-   The backend runs on `http://localhost:5000` by default.
+4. **Seed products:**
 
-3. **API Endpoints:**
+   ```bash
+   node prisma/seed.js
+   ```
+
+5. **Start the server:**
+
+   ```bash
+   npm run dev
+   ```
+
+   The backend runs on `http://localhost:4000` by default.
+
+6. **API Endpoints:**
    - `POST /api/auth/signup` – Register new user
-   - `POST /api/auth/login` – Login, returns JWT
+   - `POST /api/auth/login` – Login, returns token
    - `GET /api/products` – List products (supports `?category=&priceMin=&priceMax=&search=`)
-   - `POST /api/products` – Add product (admin only)
-   - `PUT /api/products/:id` – Update product (admin only)
-   - `DELETE /api/products/:id` – Delete product (admin only)
-   - `GET /api/cart` – Get user cart (auth required)
+   - `GET /api/cart?userId=...` – Get user cart (auth required)
    - `POST /api/cart` – Add item to cart (auth required)
-   - `DELETE /api/cart/:itemId` – Remove item from cart (auth required)
+   - `PUT /api/cart/:id` – Update cart item quantity (auth required)
+   - `DELETE /api/cart/:id` – Remove item from cart (auth required)
+   - `DELETE /api/cart` – Clear cart (auth required)
 
 ---
 
@@ -67,18 +88,23 @@ A single-page e-commerce web application with authentication, product listing, f
 1. **Install dependencies:**
 
    ```bash
+   cd frontend
    npm install
    ```
 
-2. **Start the frontend:**
+2. **Configure environment:**
+
+   - Copy `.env.example` to `.env` and set `VITE_API_URL` to your backend API (e.g. `http://localhost:4000/api`)
+
+3. **Start the frontend:**
 
    ```bash
    npm run dev
    ```
 
-   The frontend runs on `http://localhost:5173` by default.
+   The frontend runs on `http://localhost:8080` by default.
 
-3. **Pages:**
+4. **Pages:**
    - `/signup` – Signup page
    - `/login` – Login page
    - `/products` – Product listing with filters
@@ -88,7 +114,7 @@ A single-page e-commerce web application with authentication, product listing, f
 
 ## Persistence
 
-- Cart items are stored per user and persist after logout (using localStorage and backend sync).
+- Cart items are stored per user in the database and persist after logout (auth required).
 
 ---
 
@@ -99,17 +125,9 @@ A single-page e-commerce web application with authentication, product listing, f
 
 ---
 
-## Submission
-
-- **Working Website:** [Your deployed link here]
-- **GitHub Repository:** [Your GitHub repo link here]
-
----
-
 ## Notes
 
 - All features are implemented as per assignment requirements.
 - Both backend and frontend are modular and easy to extend.
-- For demo/testing, use the provided default admin/user credentials or register a new account.
-
+- For demo/testing, register a new account and use seeded products.
 ---

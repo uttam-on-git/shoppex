@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL;
 import { CartItem, Product } from '@/types/product';
 
 interface CartContextType {
@@ -19,10 +21,29 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
   // Load cart from backend on mount
+  const [userId, setUserId] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Get userId from /api/auth/me
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch(`${API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data && data.id) setUserId(data.id);
+        });
+    }
+  }, []);
+
   useEffect(() => {
     const fetchCart = async () => {
+      if (!userId) return;
       try {
-        const response = await fetch('http://localhost:4000/api/cart');
+        const response = await fetch(`${API_URL}/cart?userId=${userId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
         if (response.ok) {
           const data = await response.json();
           setCart(data);
@@ -32,14 +53,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
     fetchCart();
-  }, []);
+  }, [userId]);
 
   const addToCart = async (product: Product, quantity: number = 1) => {
+    if (!userId) return;
     try {
-      const response = await fetch('http://localhost:4000/api/cart', {
+      const response = await fetch(`${API_URL}/cart`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product, quantity })
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ userId, productId: product.id, quantity })
       });
       if (response.ok) {
         const data = await response.json();
@@ -51,9 +76,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const removeFromCart = async (productId: number) => {
+    if (!userId) return;
     try {
-      const response = await fetch(`http://localhost:4000/api/cart/${productId}`, {
-        method: 'DELETE'
+      const response = await fetch(`${API_URL}/cart/${productId}?userId=${userId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
       });
       if (response.ok) {
         const data = await response.json();
@@ -65,15 +94,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateQuantity = async (productId: number, quantity: number) => {
+    if (!userId) return;
     if (quantity <= 0) {
       await removeFromCart(productId);
       return;
     }
     try {
-      const response = await fetch(`http://localhost:4000/api/cart/${productId}`, {
+      const response = await fetch(`${API_URL}/cart/${productId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quantity })
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ userId, quantity })
       });
       if (response.ok) {
         const data = await response.json();
@@ -85,9 +118,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const clearCart = async () => {
+    if (!userId) return;
     try {
-      const response = await fetch('http://localhost:4000/api/cart', {
-        method: 'DELETE'
+      const response = await fetch(`${API_URL}/cart?userId=${userId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
       });
       if (response.ok) {
         const data = await response.json();
